@@ -111,9 +111,9 @@ function applyRules(content: string): string {
 export default definePlugin({
     name: "SmartCapitalization",
     description: "Automatically capitalizes the first letter of each message and after punctuation marks.",
-    authors: [{ name: "dimabreus", id: 1447975008n }],
+    authors: [{ name: "dimabreus", id: 840559505308909599n }],
     dependencies: ["MessageEventsAPI"],
-    
+
     settings,
 
     async start() {
