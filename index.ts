@@ -110,7 +110,7 @@ function applyRules(content: string): string {
 
 export default definePlugin({
     name: "SmartCapitalization",
-    description: "Automatically capitalizes the first letter of each message and after punctuation marks.",
+    description: "SmartCapitalization is a customizable Vencord plugin that writes with a capital letter at the beginning of each sentence, automatically adds periods at the end of messages and lines, with user-defined exclusions.",
     authors: [{ name: "dimabreus", id: 840559505308909599n }],
     dependencies: ["MessageEventsAPI"],
 
