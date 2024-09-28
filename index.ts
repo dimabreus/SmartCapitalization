@@ -1,6 +1,7 @@
 import { addPreSendListener, removePreSendListener } from "@api/MessageEvents";
 import { definePluginSettings } from "@api/Settings";
 import definePlugin, { OptionType } from "@utils/types";
+import extensions from "./extensions.json";
 
 const settings = definePluginSettings({
     delimiters: {
@@ -51,19 +52,42 @@ function addDotIfMissing(str: string): string {
     return !excludedSymbols.includes(endChar) ? str.trimEnd() + '.' : str;
 }
 
-function extractUrls(content: string): { content: string, urls: string[] } {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const urls: string[] = [];
-    content = content.replace(urlRegex, (url) => {
-        urls.push(url);
-        return `__URL${urls.length - 1}__`;
-    });
-    return { content, urls };
+function isExtension(word: string) {
+    console.log(extensions);
+    return extensions.includes(word);
 }
 
-function restoreUrls(content: string, urls: string[]): string {
-    urls.forEach((url, index) => {
-        content = content.replace(`__URL${index}__`, url);
+function extractExceptions(content: string): { content: string, exceptions: { [key: string]: string; }; } {
+    const patterns: { regex: RegExp, placeholder: string; }[] = [
+        { regex: /`([^`]+)`/g, placeholder: 'INLINE_CODE' },
+        { regex: /```([^`]+)```/g, placeholder: 'BLOCK_CODE' },
+        { regex: /(https?:\/\/[^\s]+)/g, placeholder: 'URL' }
+    ];
+
+    const exceptions: { [key: string]: string; } = {};
+
+    patterns.forEach(({ regex, placeholder }) => {
+        content = content.replace(regex, (match) => {
+            const index = Object.keys(exceptions).length;
+            exceptions[`${placeholder}${index}`] = match;
+            return `__${placeholder}${index}__`;
+        });
+    });
+
+    content = content.replace(/(?:[\w~@#\$%\^&\-\+=_\(\)\{\}\[\]'`\.|\s]+)\.(\w+)/g, (match: string, extension: string) => {
+        if (!isExtension(extension)) return match;
+
+        const index = Object.keys(exceptions).length;
+        exceptions[`FILE${index}`] = match;
+        return `__FILE${index}__`;
+    });
+
+    return { content, exceptions };
+}
+
+function restoreExceptions(content: string, exceptions: { [key: string]: string; }): string {
+    Object.entries(exceptions).forEach(([key, value]) => {
+        content = content.replace(`__${key}__`, value);
     });
     return content;
 }
@@ -103,9 +127,9 @@ function processContent(content: string): string {
 function applyRules(content: string): string {
     if (content.length === 0) return content;
 
-    const { content: processedContent, urls } = extractUrls(content);
+    const { content: processedContent, exceptions } = extractExceptions(content);
     content = processContent(processedContent);
-    return restoreUrls(content, urls);
+    return restoreExceptions(content, exceptions);
 }
 
 export default definePlugin({
