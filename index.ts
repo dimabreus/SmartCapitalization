@@ -39,6 +39,12 @@ const settings = definePluginSettings({
         default: "!?.,:()",
         description: "Symbols after which a period should not be added at the end.",
         restartNeeded: false
+    },
+    excludeCommandPrefixes: {
+        type: OptionType.STRING,
+        default: "!?.",
+        description: "Prefixes that prevent capitalization if used at the start of a message.",
+        restartNeeded: false
     }
 });
 
@@ -107,7 +113,7 @@ function addDotsToLines(content: string): string {
 }
 
 function applyDelimiters(content: string): string {
-    const regexp = new RegExp(`[${settings.store.delimiters}]\\s*`, "g");
+    const regexp = new RegExp(`(?<!^[${settings.store.excludeCommandPrefixes}])(?!^[${settings.store.excludeCommandPrefixes}])[${settings.store.delimiters}]\\s*`, "g");
     content.replaceAll(regexp, (substring: string, index: number) => {
         const letterToCapitalizeIndex = index + substring.length;
         content = content.slice(0, letterToCapitalizeIndex) + content.charAt(letterToCapitalizeIndex).toUpperCase() + content.slice(letterToCapitalizeIndex + 1);
