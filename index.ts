@@ -1,6 +1,13 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2024 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 import { addPreSendListener, removePreSendListener } from "@api/MessageEvents";
 import { definePluginSettings } from "@api/Settings";
 import definePlugin, { OptionType } from "@utils/types";
+
 import extensions from "./extensions.json";
 
 const settings = definePluginSettings({
@@ -54,8 +61,8 @@ function capitalizeFirstLetterOfString(str: string): string {
 
 function addDotIfMissing(str: string): string {
     const endChar = str.trimEnd().slice(-1);
-    const excludedSymbols = settings.store.excludeEndSymbols.split('');
-    return !excludedSymbols.includes(endChar) ? str.trimEnd() + '.' : str;
+    const excludedSymbols = settings.store.excludeEndSymbols.split("");
+    return !excludedSymbols.includes(endChar) ? str.trimEnd() + "." : str;
 }
 
 function isExtension(word: string) {
@@ -65,22 +72,22 @@ function isExtension(word: string) {
 
 function extractExceptions(content: string): { content: string, exceptions: { [key: string]: string; }; } {
     const patterns: { regex: RegExp, placeholder: string; }[] = [
-        { regex: /`([^`]+)`/g, placeholder: 'INLINE_CODE' },
-        { regex: /```([^`]+)```/g, placeholder: 'BLOCK_CODE' },
-        { regex: /(https?:\/\/[^\s]+)/g, placeholder: 'URL' }
+        { regex: /`([^`]+)`/g, placeholder: "INLINE_CODE" },
+        { regex: /```([^`]+)```/g, placeholder: "BLOCK_CODE" },
+        { regex: /(https?:\/\/[^\s]+)/g, placeholder: "URL" }
     ];
 
     const exceptions: { [key: string]: string; } = {};
 
     patterns.forEach(({ regex, placeholder }) => {
-        content = content.replace(regex, (match) => {
+        content = content.replace(regex, match => {
             const index = Object.keys(exceptions).length;
             exceptions[`${placeholder}${index}`] = match;
             return `__${placeholder}${index}__`;
         });
     });
 
-    content = content.replace(/(?:[\w~@#\$%\^&\-\+=_\(\)\{\}\[\]'`\.|\s]+)\.(\w+)/g, (match: string, extension: string) => {
+    content = content.replace(/(?:[\w~@#$%^&\-+=_(){}[\]"`.|\\s]+)\.(\w+)/g, (match: string, extension: string) => {
         if (!isExtension(extension)) return match;
 
         const index = Object.keys(exceptions).length;
